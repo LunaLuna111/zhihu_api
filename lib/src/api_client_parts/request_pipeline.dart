@@ -213,7 +213,7 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
         debugPrint(
           'oauth-first ${response.statusLabel}; retrying GET once with guest',
         );
-        return send(
+        return await send(
           method,
           uri,
           headers: headers,
@@ -433,7 +433,7 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
         final result = await refreshAccountSessionOnce();
         if (result.signedIn) {
           return method == 'GET'
-              ? send(
+              ? await send(
                   method,
                   uri,
                   headers: headers,
@@ -487,7 +487,7 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
       final result = await refreshAccountSessionOnce();
       if (result.signedIn) {
         if (method == 'GET') {
-          return send(
+          return await send(
             method,
             uri,
             headers: headers,
