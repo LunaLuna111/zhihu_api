@@ -17,16 +17,8 @@
 dependencies:
   zhihu_api:
     git:
-      url: https://github.com/<owner>/<repository>.git
+      url: https://github.com/LunaLuna111/zhihu_api.git
       ref: v0.2.0
-~~~
-
-### 本地路径
-
-~~~yaml
-dependencies:
-  zhihu_api:
-    path: ../zhihu_api
 ~~~
 
 ## 导入入口
@@ -631,4 +623,4 @@ dart test
 
 ## 许可证
 
-MIT，见 [LICENSE](LICENSE)。
+MIT，见 [LICENSE](https://github.com/LunaLuna111/zhihu_api/blob/main/LICENSE)。
