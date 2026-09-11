@@ -1,0 +1,29 @@
+name: Dart package
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Locate package root
+        id: package
+        shell: bash
+        run: |
+          if [ -f packages/zhihu_api/pubspec.yaml ]; then
+            echo "dir=packages/zhihu_api" >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=." >> "$GITHUB_OUTPUT"
+          fi
+      - run: dart pub get
+        working-directory: ${{ steps.package.outputs.dir }}
+      - run: dart analyze
+        working-directory: ${{ steps.package.outputs.dir }}
+      - run: dart test
+        working-directory: ${{ steps.package.outputs.dir }}

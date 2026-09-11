@@ -1,0 +1,17 @@
+name: zhihu_api
+description: Reusable pure-Dart client, models, routes, and parsers for Zhihu integrations.
+version: 0.2.0
+publish_to: none
+topics:
+  - api-client
+  - zhihu
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+dependencies:
+  crypto: ^3.0.7
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.0
