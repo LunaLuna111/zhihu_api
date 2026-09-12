@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4
+
+- Added search filter configuration models, parsing, and fetch route.
+
 ## 0.2.3
 
 - Search completion parsing now removes case-insensitive duplicate queries.

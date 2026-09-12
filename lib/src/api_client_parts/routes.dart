@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../api_client.dart';
+import '../search_filters.dart';
 import '../search_hot.dart';
 import '../search_suggestions.dart';
 
@@ -313,6 +314,17 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
     final response = await publicWebGet('/api/v4/search/hot_search');
     if (!response.isSuccess) throw response.failure;
     return parseSearchHotItems(response.json, limit: limit);
+  }
+
+  /// Loads the server-provided search filter groups using the same API
+  /// version as the native search configuration request.
+  Future<List<List<SearchFilterOption>>> fetchSearchFilterGroups() async {
+    final response = await getUri(
+      searchCustomizeUri(),
+      headers: const {'x-api-version': '3.0.91'},
+    );
+    if (!response.isSuccess) throw response.failure;
+    return parseSearchFilterGroups(response.json);
   }
 
   /// Search launched from an official profile toolbar. The restriction keeps

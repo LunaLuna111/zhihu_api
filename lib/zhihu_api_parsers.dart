@@ -8,4 +8,5 @@ library;
 export 'src/comment_emoticons.dart';
 export 'src/json_tools.dart';
 export 'src/search_hot.dart';
+export 'src/search_filters.dart';
 export 'src/search_suggestions.dart';
