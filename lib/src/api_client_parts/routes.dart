@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../api_client.dart';
+import '../search_suggestions.dart';
 
 extension ZhihuApiClientRoutes on ZhihuApiClient {
   /// Write operations are deliberately unavailable to an anonymous guest.
@@ -269,6 +270,35 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
   }
 
   Uri searchCustomizeUri() => apiUri('/search/customize');
+
+  /// Public Web search completion used while the user is typing. The
+  /// original client keeps this request anonymous and uses `magi=1`; unlike
+  /// `/search_v3`, it is hosted on `www.zhihu.com/api/v4`.
+  Uri searchSuggestionsUri({required String keyword}) {
+    final normalized = keyword.trim();
+    if (normalized.isEmpty || normalized.length > 128) {
+      throw const ApiTransportException('搜索补全关键词不能为空且不能超过 128 字符');
+    }
+    return Uri.https(
+      ZhihuApiClient.publicWebHost,
+      '/api/v4/search/suggest',
+      <String, String>{'q': normalized, 'magi': '1'},
+    );
+  }
+
+  /// Loads a small ordered list of completion queries without attaching
+  /// account, guest, cookie, UDID, or mobile signing headers.
+  Future<List<SearchSuggestion>> fetchSearchSuggestions({
+    required String keyword,
+  }) async {
+    final response = await send(
+      'GET',
+      searchSuggestionsUri(keyword: keyword),
+      headers: const {},
+    );
+    if (!response.isSuccess) throw response.failure;
+    return parseSearchSuggestions(response.json);
+  }
 
   /// Search launched from an official profile toolbar. The restriction keeps
   /// every result scoped to one member instead of performing a global search.

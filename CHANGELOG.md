@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Added anonymous search completion routes and a tolerant response parser for
+  `GET /api/v4/search/suggest?q=...&magi=1`.
+
 ## 0.2.0
 
 - Added the non-persistent `InMemoryApiSession` adapter for Dart processes,
