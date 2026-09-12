@@ -80,6 +80,7 @@ class ZhihuApiClient {
   static const questionFeedsInitialInclude =
       'big_card_summary,media_detail,reaction_instruction,is_author,is_thanked,'
       'voting,is_favorited,label_info,content_text_length,reactions';
+  static const searchVerticalInfo = '0,0,0,0,0,0,0,0,0,0,0,0';
   static const Map<String, Object> questionFeedsInitialQuery = {
     'order': 'default',
     'show_detail': 1,

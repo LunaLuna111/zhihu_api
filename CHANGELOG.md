@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5
+
+- Added the native `vertical_info` tuple to content-type search filters.
+
 ## 0.2.4
 
 - Added search filter configuration models, parsing, and fetch route.

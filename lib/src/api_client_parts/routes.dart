@@ -256,6 +256,11 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
         throw const ApiTransportException('搜索筛选值无效');
       }
       custom.add('$group=${Uri.encodeComponent(value)}');
+      if (group == 'vertical') {
+        custom.add(
+          'vertical_info=${Uri.encodeComponent(ZhihuApiClient.searchVerticalInfo)}',
+        );
+      }
     }
     final searchSource = custom.isEmpty ? 'Normal' : 'Filter';
     final base =

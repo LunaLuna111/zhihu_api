@@ -74,4 +74,33 @@ void main() {
     expect(transport.requestedUri, responseUri);
     expect(transport.requestedHeaders?['x-api-version'], '3.0.91');
   });
+
+  test('search content filters include the native vertical info tuple', () {
+    final api = ZhihuApiClient(
+      InMemoryApiSession(),
+      transport: _Transport(
+        _response(Uri.https('api.zhihu.com', '/search/customize'), const {}),
+      ),
+    );
+    addTearDown(api.close);
+
+    final uri = api.searchInitialUri(
+      keyword: 'flutter',
+      type: 'general',
+      filters: const {'vertical': 'answer'},
+    );
+
+    expect(uri.queryParameters['vertical'], 'answer');
+    expect(
+      uri.queryParameters['vertical_info'],
+      ZhihuApiClient.searchVerticalInfo,
+    );
+    expect(
+      uri.toString(),
+      contains(
+        '&vertical=answer&vertical_info='
+        '0%2C0%2C0%2C0%2C0%2C0%2C0%2C0%2C0%2C0%2C0%2C0&',
+      ),
+    );
+  });
 }
