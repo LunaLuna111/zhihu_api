@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- Search completion parsing now removes case-insensitive duplicate queries.
+
 ## 0.2.2
 
 - Added anonymous hot-search routes and tolerant parsing for

@@ -1,6 +1,6 @@
 name: zhihu_api
 description: Reusable pure-Dart client, models, routes, and parsers for Zhihu integrations.
-version: 0.2.2
+version: 0.2.3
 publish_to: none
 repository: https://github.com/LunaLuna111/zhihu_api
 issue_tracker: https://github.com/LunaLuna111/zhihu_api/issues

@@ -54,7 +54,9 @@ class SearchSuggestion {
 
 /// Parses both the current `{suggest: [...]}` response and the older list
 /// wrappers observed in public Web responses. Duplicate visible queries are
-/// removed while preserving the server order.
+/// removed while preserving the server order. Matching is case-insensitive so
+/// different Web/IME variants of the same visible query do not duplicate a
+/// row for library consumers.
 List<SearchSuggestion> parseSearchSuggestions(Object? value, {int limit = 10}) {
   if (limit <= 0) return const [];
   final candidates = _suggestionList(value);
@@ -62,7 +64,10 @@ List<SearchSuggestion> parseSearchSuggestions(Object? value, {int limit = 10}) {
   final seen = <String>{};
   for (final candidate in candidates) {
     final suggestion = SearchSuggestion.tryParse(candidate);
-    if (suggestion == null || !seen.add(suggestion.query)) continue;
+    if (suggestion == null ||
+        !seen.add(suggestion.query.trim().toLowerCase())) {
+      continue;
+    }
     result.add(suggestion);
     if (result.length >= limit) break;
   }

@@ -5,7 +5,7 @@
 独立的纯 Dart 知乎 API 库，提供请求客户端、路由、响应模型、解析器、评论/内容模型、
 手机号登录、二维码登录和盐选接口。
 
-- 版本：<code>0.2.2</code>
+- 版本：<code>0.2.3</code>
 - Dart：<code>&gt;=3.8.0 &lt;4.0.0</code>
 - 依赖：<code>crypto</code>
 
@@ -18,7 +18,7 @@ dependencies:
   zhihu_api:
     git:
       url: https://github.com/LunaLuna111/zhihu_api.git
-      ref: v0.2.2
+      ref: v0.2.3
 ~~~
 
 ## 导入入口

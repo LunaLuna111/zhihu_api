@@ -39,6 +39,7 @@ void main() {
       'suggest': [
         {'query': 'deepseek', 'id': -1, 'label': 'hot'},
         {'query': ' deepseek '},
+        {'query': 'DEEPSEEK'},
         {'query': 'DeepSeek V4', 'tab_type': 'general'},
         {'label': 'invalid'},
       ],
