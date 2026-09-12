@@ -33,5 +33,6 @@ export 'src/json_tools_parts/search_normalizers.dart';
 export 'src/json_tools_parts/search_rows.dart';
 export 'src/negative_feedback.dart';
 export 'src/privacy_device_profile.dart';
+export 'src/search_hot.dart';
 export 'src/search_suggestions.dart';
 export 'src/x_zse_signer.dart';

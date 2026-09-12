@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+- Added anonymous hot-search routes and tolerant parsing for
+  `GET /api/v4/search/hot_search`.
+- Added case-insensitive duplicate filtering for search hot items.
+
 ## 0.2.1
 
 - Added anonymous search completion routes and a tolerant response parser for

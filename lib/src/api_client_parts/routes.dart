@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../api_client.dart';
+import '../search_hot.dart';
 import '../search_suggestions.dart';
 
 extension ZhihuApiClientRoutes on ZhihuApiClient {
@@ -298,6 +299,20 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
     );
     if (!response.isSuccess) throw response.failure;
     return parseSearchSuggestions(response.json);
+  }
+
+  /// Loads the ordered hot-search list without attaching account, guest,
+  /// cookie, UDID, or mobile signing headers.
+  Uri searchHotUri() =>
+      Uri.https(ZhihuApiClient.publicWebHost, '/api/v4/search/hot_search');
+
+  Future<List<SearchHotItem>> fetchSearchHotItems({int limit = 15}) async {
+    if (limit <= 0 || limit > 50) {
+      throw const ApiTransportException('热搜数量必须在 1 到 50 之间');
+    }
+    final response = await publicWebGet('/api/v4/search/hot_search');
+    if (!response.isSuccess) throw response.failure;
+    return parseSearchHotItems(response.json, limit: limit);
   }
 
   /// Search launched from an official profile toolbar. The restriction keeps
