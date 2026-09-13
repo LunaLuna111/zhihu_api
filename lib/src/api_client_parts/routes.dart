@@ -380,6 +380,44 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
     );
   }
 
+  /// Initial root-comment target for a selected answer/article sentence.
+  ///
+  /// The native client does not implement sentence comments as a
+  /// `type=sentence` variant of the ordinary root-comment collection. It
+  /// switches to `/segment/root_comment` and sends the selected segment IDs
+  /// in the query string. Keeping this route separate prevents callers from
+  /// accidentally showing the full comment list in a sentence-comment sheet.
+  Uri segmentCommentsInitialUri({
+    required String contentType,
+    required String contentId,
+    required String segmentId,
+    String orderBy = 'score',
+  }) {
+    final plural = commentObjectPlural(contentType);
+    final normalizedId = contentId.trim();
+    if (!RegExp(r'^\d+$').hasMatch(normalizedId)) {
+      throw const ApiTransportException('评论对象 ID 必须是数字');
+    }
+    final requestedOrder = orderBy.trim().toLowerCase();
+    final normalizedOrder = requestedOrder == 'time' ? 'ts' : requestedOrder;
+    if (!const {'score', 'ts'}.contains(normalizedOrder)) {
+      throw const ApiTransportException('评论排序无效');
+    }
+    final normalizedSegmentId = segmentId.trim();
+    if (normalizedSegmentId.isEmpty ||
+        normalizedSegmentId.length > 2048 ||
+        !RegExp(
+          r'^[A-Za-z0-9_-]+(?:,[A-Za-z0-9_-]+)*$',
+        ).hasMatch(normalizedSegmentId)) {
+      throw const ApiTransportException('段评定位信息无效');
+    }
+    return Uri.parse(
+      'https://${ZhihuApiClient.apiHost}/comment_v5/$plural/$normalizedId/'
+      'segment/root_comment?segment_id=$normalizedSegmentId&limit=20&offset='
+      '&order_by=$normalizedOrder',
+    );
+  }
+
   /// Side request used with the anonymous comment list. It supplies the
   /// content author and continuous-
   /// consumption header independently from the paged root-comment response.
