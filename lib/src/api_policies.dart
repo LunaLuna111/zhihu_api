@@ -115,7 +115,9 @@ class DefaultApiAuthenticationPolicy implements ApiAuthenticationPolicy {
 
   @override
   bool shouldClearAfterRefreshFailure(ApiResponse response) =>
-      !response.isSuccess || response.businessCode == '100008';
+      response.businessCode == '100008' ||
+      response.statusCode == 401 &&
+          const {'101', '401'}.contains(response.businessCode);
 }
 
 /// Optional response cache boundary. The core client does not cache by

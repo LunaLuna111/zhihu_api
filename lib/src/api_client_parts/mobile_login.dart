@@ -414,8 +414,14 @@ extension ZhihuApiClientMobileLogin on ZhihuApiClient {
         if (await clearAccountSessionIfUnchanged(
           authorizationAtStart,
           credentialRevisionAtStart,
+          reason: '账号 Token 刷新返回终止性失效码',
+          source: 'proactive_account_refresh',
+          statusCode: result.response.statusCode,
+          businessCode: result.response.businessCode,
         )) {
-          debugPrint('account token refresh terminal code=100008; logged out');
+          debugPrint(
+            'account token refresh terminal code=100008; cleanup awaits user confirmation',
+          );
         }
       } else {
         debugPrint('account token refresh retained previous session');

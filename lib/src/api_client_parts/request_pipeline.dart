@@ -472,9 +472,13 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
       if (await clearAccountSessionIfUnchanged(
         accountAuthorizationAtSend,
         accountCredentialRevisionAtSend,
+        reason: '身份接口与刷新接口均确认账号会话可能已失效',
+        source: 'people_self_identity_rejection',
+        statusCode: response.statusCode,
+        businessCode: '100008',
       )) {
         debugPrint(
-          'account logout confirmed by terminal refresh; credentials cleared',
+          'account logout confirmed by terminal refresh; cleanup awaits user confirmation',
         );
       }
       return null;
@@ -506,10 +510,14 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
         if (await clearAccountSessionIfUnchanged(
           accountAuthorizationAtSend,
           accountCredentialRevisionAtSend,
+          reason: '账号请求收到失效信号且刷新失败',
+          source: 'passive_account_refresh',
+          statusCode: response.statusCode,
+          businessCode: result.response.businessCode,
         )) {
           debugPrint(
             'account passive refresh rejected '
-            '${result.response.statusLabel}; credentials cleared',
+            '${result.response.statusLabel}; cleanup awaits user confirmation',
           );
         }
       }
@@ -542,8 +550,12 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
 
   Future<bool> clearAccountSessionIfUnchanged(
     String expectedAuthorization,
-    int expectedCredentialRevision,
-  ) async {
+    int expectedCredentialRevision, {
+    String reason = '服务器确认账号会话可能已失效',
+    String source = 'account_authentication_recovery',
+    int? statusCode,
+    String? businessCode,
+  }) async {
     if (!session.hasRefreshableAccountSession ||
         session.authorization != expectedAuthorization ||
         session.credentialRevision != expectedCredentialRevision) {
@@ -554,7 +566,17 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
       await existing;
       return false;
     }
-    final future = session.clear();
+    final delegate = session is ApiSessionCleanupDelegate
+        ? session as ApiSessionCleanupDelegate
+        : null;
+    final future = _requestAccountSessionCleanup(
+      delegate: delegate,
+      reason: reason,
+      source: source,
+      statusCode: statusCode,
+      businessCode: businessCode,
+      credentialRevision: expectedCredentialRevision,
+    );
     accountLogout = future;
     try {
       await future;
@@ -562,6 +584,31 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
     } finally {
       if (identical(accountLogout, future)) accountLogout = null;
     }
+  }
+
+  Future<void> _requestAccountSessionCleanup({
+    required ApiSessionCleanupDelegate? delegate,
+    required String reason,
+    required String source,
+    required int? statusCode,
+    required String? businessCode,
+    required int credentialRevision,
+  }) async {
+    if (delegate == null) {
+      // Keep the pure-Dart API backwards compatible for hosts that have not
+      // implemented a confirmation UI yet.
+      await session.clear();
+      return;
+    }
+    await delegate.requestAccountSessionCleanup(
+      ApiSessionCleanupRequest(
+        reason: reason,
+        source: source,
+        statusCode: statusCode,
+        businessCode: businessCode,
+        credentialRevision: credentialRevision,
+      ),
+    );
   }
 
   bool shouldTryOauthFirst(String method) {
