@@ -530,6 +530,9 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
     String zaSpm = '',
     CommentEmoticon? sticker,
     ContentSelection? selection,
+    String? imageUrl,
+    int imageWidth = 0,
+    int imageHeight = 0,
   }) {
     requireWriteSession();
     return postJsonUri(
@@ -539,6 +542,9 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
         replyCommentId: replyCommentId,
         sticker: sticker,
         selection: selection,
+        imageUrl: imageUrl,
+        imageWidth: imageWidth,
+        imageHeight: imageHeight,
       ),
       headers: {if (zaSpm.trim().isNotEmpty) 'za-spm': zaSpm.trim()},
     );
@@ -552,6 +558,9 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
     String replyCommentId = '',
     String zaSpm = '',
     CommentEmoticon? sticker,
+    String? imageUrl,
+    int imageWidth = 0,
+    int imageHeight = 0,
   }) {
     requireWriteSession();
     if (!selection.hasSegmentTarget) {
@@ -564,6 +573,9 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
         replyCommentId: replyCommentId,
         sticker: sticker,
         selection: selection,
+        imageUrl: imageUrl,
+        imageWidth: imageWidth,
+        imageHeight: imageHeight,
       ),
       headers: {if (zaSpm.trim().isNotEmpty) 'za-spm': zaSpm.trim()},
     );
@@ -576,6 +588,9 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
     String replyCommentId = '',
     String zaSpm = '',
     CommentEmoticon? sticker,
+    String? imageUrl,
+    int imageWidth = 0,
+    int imageHeight = 0,
   }) {
     requireWriteSession();
     return postJsonUri(
@@ -584,6 +599,9 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
         content: content,
         replyCommentId: replyCommentId,
         sticker: sticker,
+        imageUrl: imageUrl,
+        imageWidth: imageWidth,
+        imageHeight: imageHeight,
       ),
       headers: {if (zaSpm.trim().isNotEmpty) 'za-spm': zaSpm.trim()},
     );

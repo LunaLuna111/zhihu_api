@@ -120,10 +120,18 @@ class ZhihuApiClient {
     String replyCommentId = '',
     CommentEmoticon? sticker,
     ContentSelection? selection,
+    String? imageUrl,
+    int imageWidth = 0,
+    int imageHeight = 0,
   }) {
     final normalizedText = content.trim();
     final markup = sticker?.submissionMarkup() ?? '';
-    final text = '$normalizedText$markup';
+    final imageMarkup = _commentImageMarkup(
+      imageUrl,
+      width: imageWidth,
+      height: imageHeight,
+    );
+    final text = '$normalizedText$markup$imageMarkup';
     if (text.isEmpty || text.runes.length > 5000) {
       throw const ApiTransportException('评论不能为空且不能超过 5000 字');
     }
@@ -136,7 +144,7 @@ class ZhihuApiClient {
       'comment_id': '',
       'content': text,
       'extra_params': '',
-      'has_img': false,
+      'has_img': imageMarkup.isNotEmpty,
       'reply_comment_id': replyId,
       'score': 0,
       'selected_settings': <Object?>[],
@@ -148,6 +156,28 @@ class ZhihuApiClient {
           : <String>[sticker!.isVip ? 'vip' : 'normal'],
       'unfriendly_check': 'strict',
     };
+  }
+
+  static String _commentImageMarkup(
+    String? imageUrl, {
+    required int width,
+    required int height,
+  }) {
+    final normalized = imageUrl?.trim() ?? '';
+    if (normalized.isEmpty) return '';
+    final uri = Uri.tryParse(normalized);
+    if (uri == null ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        (uri.scheme != 'https' && uri.scheme != 'http') ||
+        normalized.length > 4096) {
+      throw const ApiTransportException('评论图片地址无效');
+    }
+    final safeWidth = width.clamp(0, 10000);
+    final safeHeight = height.clamp(0, 10000);
+    const escape = HtmlEscape(HtmlEscapeMode.attribute);
+    return '<a href="${escape.convert(normalized)}" class="comment_img" '
+        'data-width="$safeWidth" data-height="$safeHeight">[图片]</a>';
   }
 
   /// Builds the payload used by the answer editor. The same map shape can be

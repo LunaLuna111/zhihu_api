@@ -307,6 +307,17 @@ extension ZhihuApiClientTransport on ZhihuApiClient {
     );
   }
 
+  /// Uploads an image selected for a comment. The endpoint and multipart
+  /// contract are shared with the account image pipeline; keeping a semantic
+  /// alias prevents callers from coupling comment composition to a profile
+  /// operation name.
+  Future<ApiResponse> uploadCommentImage({
+    required List<int> bytes,
+    required String fileName,
+    required String mimeType,
+  }) =>
+      uploadProfileImage(bytes: bytes, fileName: fileName, mimeType: mimeType);
+
   /// Commits the URL returned by `/upload_image` to the current account.
   Future<ApiResponse> updateAccountAvatar(String avatarUrl) {
     requireWriteSession();

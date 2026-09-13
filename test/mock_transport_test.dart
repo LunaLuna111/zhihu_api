@@ -257,6 +257,37 @@ ApiResponse _response(Uri uri, Object json) => ApiResponse(
 );
 
 void main() {
+  test('comment image body follows the native comment_img contract', () {
+    final body = ZhihuApiClient.buildCommentBody(
+      content: '正文',
+      imageUrl: 'https://picx.zhimg.com/example.png',
+      imageWidth: 640,
+      imageHeight: 480,
+    );
+
+    expect(
+      body['content'],
+      '正文<a href="https://picx.zhimg.com/example.png" class="comment_img" '
+      'data-width="640" data-height="480">[图片]</a>',
+    );
+    expect(body['has_img'], isTrue);
+  });
+
+  test(
+    'comment image only is accepted while a plain empty comment is rejected',
+    () {
+      final body = ZhihuApiClient.buildCommentBody(
+        content: '',
+        imageUrl: 'https://picx.zhimg.com/example.png',
+      );
+      expect(body['has_img'], isTrue);
+      expect(
+        () => ZhihuApiClient.buildCommentBody(content: ''),
+        throwsA(isA<ApiTransportException>()),
+      );
+    },
+  );
+
   test('public read uses the injected transport', () async {
     final uri = Uri.https('www.zhihu.com', '/api/v4/questions/42');
     final transport = _MockTransport(_response(uri, {'id': '42'}));

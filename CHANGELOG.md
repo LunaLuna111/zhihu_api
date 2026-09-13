@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.6
+
+- Added comment image upload alias and `comment_img` payload support.
+
 ## 0.2.5
 
 - Added the native `vertical_info` tuple to content-type search filters.
