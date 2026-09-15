@@ -127,7 +127,10 @@ class _MockTransport implements ApiTransport {
 
   final ApiResponse response;
   int calls = 0;
-  final requests = <({String method, Uri uri, Map<String, String> headers})>[];
+  final requests =
+      <
+        ({String method, Uri uri, Map<String, String> headers, List<int>? body})
+      >[];
 
   @override
   Future<ApiResponse> send({
@@ -138,7 +141,7 @@ class _MockTransport implements ApiTransport {
     required int maxResponseBytes,
   }) async {
     calls += 1;
-    requests.add((method: method, uri: uri, headers: headers));
+    requests.add((method: method, uri: uri, headers: headers, body: body));
     return response;
   }
 
@@ -247,6 +250,42 @@ class _PassthroughSigner extends XZseSigner {
   }) async => Map<String, String>.of(headers);
 }
 
+class _RecordingLogger implements ApiLogger {
+  final records =
+      <({String category, String message, Map<String, Object?> details})>[];
+
+  @override
+  Future<void> record({
+    required String category,
+    required String level,
+    required String message,
+    Map<String, Object?> details = const {},
+  }) async {
+    records.add((category: category, message: message, details: details));
+  }
+
+  @override
+  Future<void> recordError(
+    Object error,
+    StackTrace stackTrace, {
+    String message = '未处理异常',
+    String category = 'error',
+  }) async {}
+
+  @override
+  Future<void> recordNetwork({
+    required String method,
+    required Uri uri,
+    required String profile,
+    int? statusCode,
+    String? statusLabel,
+    String? businessCode,
+    int? bodyBytes,
+    int? durationMs,
+    String? errorType,
+  }) async {}
+}
+
 ApiResponse _response(Uri uri, Object json) => ApiResponse(
   uri: uri,
   statusCode: 200,
@@ -257,6 +296,72 @@ ApiResponse _response(Uri uri, Object json) => ApiResponse(
 );
 
 void main() {
+  test(
+    'mobile write preserves cookie context and native form contract',
+    () async {
+      final session = InMemoryApiSession(
+        authorization: 'Bearer access-token',
+        udid: 'test-udid',
+        cookie: 'z_c0=z_c0=legacy-value; d_c0=stable-value',
+        sessionKind: 'account',
+      );
+      final uri = Uri.https('api.zhihu.com', '/answers/123/voters');
+      final transport = _MockTransport(_response(uri, {'success': true}));
+      final logger = _RecordingLogger();
+      final api = ZhihuApiClient(
+        session,
+        transport: transport,
+        xZseSigner: _PassthroughSigner(),
+        cloudIdProvider: _StaticCloudIdProvider(),
+        logger: logger,
+      );
+
+      final response = await api.voteAnswer(
+        answerId: '123',
+        voting: 1,
+        voteupCount: 9,
+      );
+
+      expect(response.isSuccess, isTrue);
+      expect(session.cookie, 'z_c0=legacy-value; d_c0=stable-value');
+      expect(transport.requests.single.method, 'POST');
+      expect(transport.requests.single.uri, uri);
+      expect(
+        String.fromCharCodes(transport.requests.single.body!),
+        'voting=1&voteup_count=9',
+      );
+      expect(
+        transport.requests.single.headers['Authorization'],
+        'Bearer access-token',
+      );
+      expect(transport.requests.single.headers['x-udid'], 'test-udid');
+      expect(
+        transport.requests.single.headers['Cookie'],
+        'z_c0=legacy-value; d_c0=stable-value',
+      );
+      final writeLog = logger.records.singleWhere(
+        (record) => record.message == '移动端写请求结果',
+      );
+      expect(writeLog.category, 'authentication');
+      expect(writeLog.details['operation'], 'content_vote');
+      expect(writeLog.details['authorization_header'], isTrue);
+      expect(writeLog.details['udid_header'], isTrue);
+      expect(writeLog.details['cookie_header'], isTrue);
+      expect(writeLog.details.containsKey('url'), isFalse);
+    },
+  );
+
+  test('legacy cookie values are normalized without double z_c0 wrapping', () {
+    expect(
+      ZhihuApiClient.cookieHeaderFromValue('z_c0=z_c0=abc; d_c0=def'),
+      'z_c0=abc; d_c0=def',
+    );
+    expect(
+      ZhihuApiClient.cookieHeaderFromValue('bare-cookie-value'),
+      'z_c0=bare-cookie-value',
+    );
+  });
+
   test('comment image body follows the native comment_img contract', () {
     final body = ZhihuApiClient.buildCommentBody(
       content: '正文',

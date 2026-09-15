@@ -367,7 +367,17 @@ class ZhihuApiClient {
             !RegExp(r'^[^=;\s]+$').hasMatch(name)) {
           continue;
         }
-        values[name] = pair.substring(separator + 1).trim();
+        var value = pair.substring(separator + 1).trim();
+        // Releases before the complete-cookie fix persisted a bare z_c0
+        // value and the client later wrapped it again.  Accept that legacy
+        // shape at the API boundary so it can never reach OkHttp as
+        // `z_c0=z_c0=...`.
+        if (name.toLowerCase() == 'z_c0') {
+          while (value.toLowerCase().startsWith('z_c0=')) {
+            value = value.substring(5).trim();
+          }
+        }
+        values[name] = value;
       }
     }
     return values.entries
@@ -402,7 +412,7 @@ class ZhihuApiClient {
   ]) {
     final values = <String, String>{};
     for (final source in [first, second, third]) {
-      for (final part in source.split(';')) {
+      for (final part in cookiePairsOnly(source).split(';')) {
         final separator = part.indexOf('=');
         if (separator <= 0) continue;
         final name = part.substring(0, separator).trim();

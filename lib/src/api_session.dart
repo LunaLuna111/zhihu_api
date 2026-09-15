@@ -391,7 +391,13 @@ class InMemoryApiSession implements ApiSession, ApiSessionCookieStore {
             !RegExp(r'^[A-Za-z_][A-Za-z0-9_-]*$').hasMatch(name)) {
           continue;
         }
-        values[name] = pair.substring(separator + 1).trim();
+        var value = pair.substring(separator + 1).trim();
+        if (name.toLowerCase() == 'z_c0') {
+          while (value.toLowerCase().startsWith('z_c0=')) {
+            value = value.substring(5).trim();
+          }
+        }
+        values[name] = value;
       }
     }
     return values.entries

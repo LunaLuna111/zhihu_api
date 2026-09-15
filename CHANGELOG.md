@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.10
+
+- Normalize legacy nested mobile cookie values before they reach write
+  requests.
+- Add redacted authentication-context diagnostics for mobile write outcomes.
+
 ## 0.2.9
 
 - Preserve the complete mobile cookie context returned by account, Guest, and

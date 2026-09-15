@@ -2,6 +2,69 @@ import 'dart:async';
 
 import '../api_client.dart';
 
+String? _writeOperationFor(Uri uri, String method) {
+  final path = uri.path;
+  final upperMethod = method.toUpperCase();
+  if (RegExp(r'^/answers/[^/]+/voters$').hasMatch(path) ||
+      RegExp(r'^/articles/[^/]+/voters$').hasMatch(path)) {
+    return 'content_vote';
+  }
+  if (RegExp(r'^/reaction/comments/[^/]+/like$').hasMatch(path)) {
+    return 'comment_like';
+  }
+  if (RegExp(r'^/pins/[^/]+/reactions$').hasMatch(path)) {
+    return 'pin_reaction';
+  }
+  if (RegExp(r'^/people/[^/]+/followers(?:/[^/]+)?$').hasMatch(path)) {
+    return 'user_follow';
+  }
+  if (RegExp(r'^/questions/[^/]+/followers(?:/[^/]+)?$').hasMatch(path)) {
+    return 'question_follow';
+  }
+  if (RegExp(
+    r'^/questions/[^/]+/(?:invitees|recommendation_invitees)',
+  ).hasMatch(path)) {
+    return 'question_invite';
+  }
+  if (RegExp(
+    r'^/comment_v5/[^/]+/[^/]+(?:/segment)?/comment$',
+  ).hasMatch(path)) {
+    return 'comment_create';
+  }
+  if (RegExp(r'^/api/v4/comment_v5/comment/[^/]+$').hasMatch(path)) {
+    return 'comment_delete';
+  }
+  if (RegExp(r'^/answers/[^/]+/collections_v2$').hasMatch(path) ||
+      RegExp(r'^/articles/[^/]+/collections$').hasMatch(path) ||
+      RegExp(r'^/collections/contents/[^/]+/[^/]+$').hasMatch(path)) {
+    return 'content_favorite';
+  }
+  if (path == '/content/drafts' || path == '/content/publish') {
+    return 'answer_publish';
+  }
+  if (RegExp(r'^/answers/[^/]+$').hasMatch(path) && upperMethod == 'DELETE') {
+    return 'answer_delete';
+  }
+  if (path == '/people/profile' || path == '/people/profile/avatar') {
+    return 'profile_update';
+  }
+  if (path == '/notifications' || path == '/notifications/read') {
+    return 'notification_write';
+  }
+  if (path == '/messages' || path == '/messages/send') {
+    return 'message_write';
+  }
+  return null;
+}
+
+bool _hasHeader(Map<String, String> headers, String name) {
+  final expected = name.toLowerCase();
+  return headers.entries.any(
+    (entry) =>
+        entry.key.toLowerCase() == expected && entry.value.trim().isNotEmpty,
+  );
+}
+
 extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
   Future<ApiResponse> send(
     String method,
@@ -126,6 +189,12 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
       );
     } on Object catch (error, stackTrace) {
       stopwatch.stop();
+      _recordWriteOutcome(
+        operation: _writeOperationFor(uri, method),
+        method: method,
+        headers: merged,
+        errorType: error.runtimeType.toString(),
+      );
       unawaited(
         apiLogger.recordNetwork(
           method: method,
@@ -147,6 +216,12 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
     }
     stopwatch.stop();
     debugLogResponse(method, uri, response);
+    _recordWriteOutcome(
+      operation: _writeOperationFor(uri, method),
+      method: method,
+      headers: merged,
+      response: response,
+    );
     unawaited(
       apiLogger.recordNetwork(
         method: method,
@@ -259,6 +334,45 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
       if (recovered != null) return recovered;
     }
     return response;
+  }
+
+  void _recordWriteOutcome({
+    required String? operation,
+    required String method,
+    required Map<String, String> headers,
+    ApiResponse? response,
+    String? errorType,
+  }) {
+    if (operation == null) return;
+    final statusCode = response?.statusCode;
+    final details = <String, Object?>{
+      'operation': operation,
+      'method': method,
+      'status_code': ?statusCode,
+      'business_code': ?response?.businessCode,
+      'error_type': ?errorType,
+      // These are presence flags only. Never record a token, cookie, request
+      // target, body, account identifier, or device identifier.
+      'authorization_header': _hasHeader(headers, 'authorization'),
+      'udid_header': _hasHeader(headers, 'x-udid'),
+      'cookie_header': _hasHeader(headers, 'cookie'),
+      'x_zse_96_header': _hasHeader(headers, 'x-zse-96'),
+      'x_zse_93_header': _hasHeader(headers, 'x-zse-93'),
+      'session_kind': session.sessionKind.trim().isEmpty
+          ? 'none'
+          : session.sessionKind.trim(),
+      'complete_mobile_context': session.hasCompleteMobileContext,
+      'account_session': session.hasAccountSession,
+      'refreshable_account_session': session.hasRefreshableAccountSession,
+    };
+    unawaited(
+      apiLogger.record(
+        category: 'authentication',
+        level: response == null || response.isSuccess ? 'info' : 'warning',
+        message: '移动端写请求结果',
+        details: details,
+      ),
+    );
   }
 
   Future<ApiResponse?> recoverGuestResponse({
