@@ -282,7 +282,7 @@ extension ZhihuApiClientMobileLogin on ZhihuApiClient {
     final cookie = ZhihuApiClient.mergeCookieHeaders(
       session.cookie,
       loginCookie,
-      zCookie.isEmpty ? '' : 'z_c0=$zCookie',
+      ZhihuApiClient.cookieHeaderFromValue(zCookie),
     );
     return sendMobileRaw(
       'GET',
@@ -298,23 +298,18 @@ extension ZhihuApiClientMobileLogin on ZhihuApiClient {
   }
 
   String zCookieFromTokenResponse(ApiResponse response) {
-    final cookie = response.jsonMap?['cookie'];
-    if (cookie is Map) {
-      final value = cookie['z_c0']?.toString().trim() ?? '';
-      if (value.isNotEmpty) return value;
-    }
+    final responseCookie = ZhihuApiClient.cookieHeaderFromValue(
+      response.jsonMap?['cookie'],
+    );
     final merged = ZhihuApiClient.mergeCookieHeaders(
+      session.cookie,
       loginCookie,
+      responseCookie,
+    );
+    return ZhihuApiClient.mergeCookieHeaders(
+      merged,
       ZhihuApiClient.cookiePairsOnly(response.headers['set-cookie'] ?? ''),
     );
-    for (final part in merged.split(';')) {
-      final separator = part.indexOf('=');
-      if (separator <= 0) continue;
-      if (part.substring(0, separator).trim() == 'z_c0') {
-        return part.substring(separator + 1).trim();
-      }
-    }
-    return '';
   }
 
   Future<ApiResponse> sendEncryptedLoginForm(
@@ -387,20 +382,10 @@ extension ZhihuApiClientMobileLogin on ZhihuApiClient {
 
   void rememberLoginCookie(ApiResponse response) {
     final rawCookie = response.jsonMap?['cookie'];
-    final responseCookie = rawCookie is Map
-        ? rawCookie.entries
-              .where((entry) => entry.value != null)
-              .map((entry) => '${entry.key}=${entry.value}')
-              .join('; ')
-        : rawCookie?.toString() ?? '';
-    final candidates = <String>[
-      responseCookie,
-      response.headers['set-cookie'] ?? '',
-    ];
     loginCookie = ZhihuApiClient.mergeCookieHeaders(
       loginCookie,
-      ZhihuApiClient.cookiePairsOnly(candidates[0]),
-      ZhihuApiClient.cookiePairsOnly(candidates[1]),
+      ZhihuApiClient.cookieHeaderFromValue(rawCookie),
+      ZhihuApiClient.cookiePairsOnly(response.headers['set-cookie'] ?? ''),
     );
   }
 

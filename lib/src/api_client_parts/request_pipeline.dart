@@ -179,6 +179,11 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
       requestBody: body,
       response: response,
     );
+    await mergeMobileResponseCookies(
+      response,
+      uri: uri,
+      isMobileApi: isMobileApi,
+    );
     if (isPublicLensVideo) {
       // An anonymous media metadata failure must never trigger account/guest
       // recovery traffic or mutate the signed-in session as a side effect.
@@ -688,6 +693,38 @@ extension ZhihuApiClientRequestPipeline on ZhihuApiClient {
       await started;
     } finally {
       guestBootstrap = null;
+    }
+  }
+
+  Future<void> mergeMobileResponseCookies(
+    ApiResponse response, {
+    required Uri uri,
+    required bool isMobileApi,
+  }) async {
+    if (!isMobileApi ||
+        !response.isSuccess ||
+        uri.path == MobileLoginContract.signInPath ||
+        !session.hasCompleteMobileContext) {
+      return;
+    }
+    final rawSetCookie = response.headers.entries
+        .where((entry) => entry.key.toLowerCase() == 'set-cookie')
+        .map((entry) => entry.value)
+        .join('\n');
+    final cookie = ZhihuApiClient.cookiePairsOnly(rawSetCookie);
+    if (cookie.isEmpty || session is! ApiSessionCookieStore) return;
+    try {
+      await (session as ApiSessionCookieStore).updateCookie(cookie);
+    } on Object catch (error, stackTrace) {
+      debugPrint('mobile response cookie update failed=${error.runtimeType}');
+      unawaited(
+        apiLogger.recordError(
+          error,
+          stackTrace,
+          message: '移动端响应 Cookie 持久化失败',
+          category: 'authentication',
+        ),
+      );
     }
   }
 }

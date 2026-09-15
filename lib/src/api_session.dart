@@ -68,13 +68,25 @@ abstract interface class ApiSession {
   Future<void> clear();
 }
 
+/// Optional session capability used to persist cookies refreshed by a mobile
+/// API response. Keeping this separate from [ApiSession] preserves source
+/// compatibility for callers whose session storage is intentionally read-only.
+abstract interface class ApiSessionCookieStore {
+  /// Merges a `Cookie` or `Set-Cookie` header value into the active session.
+  ///
+  /// Implementations must replace matching cookie names and retain unrelated
+  /// existing names. Cookie attributes such as `Path` and `HttpOnly` are not
+  /// sent back as request cookies.
+  Future<void> updateCookie(String value);
+}
+
 /// A non-persistent session implementation for command-line clients,
 /// examples, and applications that provide their own storage boundary.
 ///
 /// It deliberately keeps every credential only in memory and reports
 /// [supportsPersistentApiSession] as `false`. Flutter applications should
 /// continue to inject a secure-storage-backed [ApiSession] instead.
-class InMemoryApiSession implements ApiSession {
+class InMemoryApiSession implements ApiSession, ApiSessionCookieStore {
   InMemoryApiSession({
     String authorization = '',
     String udid = '',
@@ -88,7 +100,7 @@ class InMemoryApiSession implements ApiSession {
     String accountUserId = '',
   }) : _authorization = authorization.trim(),
        _udid = udid.trim(),
-       _cookie = cookie.trim(),
+       _cookie = _cookieValue(cookie),
        _msId = msId.trim(),
        _sessionKind = sessionKind.trim(),
        _refreshToken = refreshToken.trim(),
@@ -191,6 +203,16 @@ class InMemoryApiSession implements ApiSession {
   @override
   Future<void> saveMsId(String value) async {
     _msId = _validated(value, 'X-MS-ID');
+  }
+
+  @override
+  Future<void> updateCookie(String value) async {
+    final incoming = _cookiePairsOnly(value);
+    if (incoming.isEmpty) return;
+    final next = _mergeCookieHeaders(_cookie, incoming);
+    if (next == _cookie) return;
+    _credentialRevision += 1;
+    _cookie = next;
   }
 
   @override
@@ -337,8 +359,60 @@ class InMemoryApiSession implements ApiSession {
   static String _cookieValue(String value) {
     final normalized = _validated(value, 'z_c0 Cookie');
     if (normalized.isEmpty) return '';
-    if (normalized.toLowerCase().startsWith('z_c0=')) return normalized;
+    if (normalized.contains(';') ||
+        RegExp(r'^[A-Za-z_][A-Za-z0-9_-]*=').hasMatch(normalized)) {
+      final pairs = _cookiePairsOnly(normalized);
+      if (pairs.isNotEmpty) return pairs;
+    }
     return 'z_c0=$normalized';
+  }
+
+  static String _cookiePairsOnly(String raw) {
+    if (raw.trim().isEmpty) return '';
+    const cookieAttributes = {
+      'domain',
+      'path',
+      'expires',
+      'max-age',
+      'httponly',
+      'secure',
+      'samesite',
+      'priority',
+      'partitioned',
+    };
+    final values = <String, String>{};
+    for (final line in raw.split(RegExp(r'[\r\n]+'))) {
+      for (final part in line.split(';')) {
+        final pair = part.trim();
+        final separator = pair.indexOf('=');
+        if (separator <= 0) continue;
+        final name = pair.substring(0, separator).trim();
+        if (cookieAttributes.contains(name.toLowerCase()) ||
+            !RegExp(r'^[A-Za-z_][A-Za-z0-9_-]*$').hasMatch(name)) {
+          continue;
+        }
+        values[name] = pair.substring(separator + 1).trim();
+      }
+    }
+    return values.entries
+        .map((entry) => '${entry.key}=${entry.value}')
+        .join('; ');
+  }
+
+  static String _mergeCookieHeaders(String first, String second) {
+    final values = <String, String>{};
+    for (final source in [first, second]) {
+      for (final part in _cookiePairsOnly(source).split(';')) {
+        final separator = part.indexOf('=');
+        if (separator <= 0) continue;
+        final name = part.substring(0, separator).trim();
+        final value = part.substring(separator + 1).trim();
+        if (name.isNotEmpty) values[name] = value;
+      }
+    }
+    return values.entries
+        .map((entry) => '${entry.key}=${entry.value}')
+        .join('; ');
   }
 
   static bool _containsZCookie(String value) => value.split(';').any((part) {

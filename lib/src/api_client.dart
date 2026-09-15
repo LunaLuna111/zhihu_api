@@ -375,6 +375,26 @@ class ZhihuApiClient {
         .join('; ');
   }
 
+  /// Normalizes a cookie value returned by a mobile JSON response or header.
+  /// A bare value is treated as the legacy `z_c0` value; named cookies and
+  /// cookie collections retain every safe pair for subsequent mobile writes.
+  static String cookieHeaderFromValue(Object? raw) {
+    if (raw == null) return '';
+    final text = raw is Map
+        ? raw.entries
+              .where((entry) => entry.value != null)
+              .map((entry) => '${entry.key}=${entry.value}')
+              .join('; ')
+        : raw is List
+        ? raw.map((item) => item.toString()).join('; ')
+        : raw.toString();
+    final normalized = text.trim();
+    if (normalized.isEmpty) return '';
+    final pairs = cookiePairsOnly(normalized);
+    if (pairs.isNotEmpty) return pairs;
+    return 'z_c0=$normalized';
+  }
+
   static String mergeCookieHeaders(
     String first, [
     String second = '',

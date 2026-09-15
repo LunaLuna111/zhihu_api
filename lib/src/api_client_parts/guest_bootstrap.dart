@@ -216,13 +216,11 @@ extension ZhihuApiClientGuestBootstrap on ZhihuApiClient {
       throw const ApiTransportException('Guest token 响应缺少 access_token');
     }
     final cookie = guest['cookie'];
-    final zCookie = cookie is Map<String, dynamic>
-        ? (ZhihuApiClient.stringValue(cookie, 'z_c0') ?? '')
-        : '';
+    final cookieHeader = ZhihuApiClient.cookieHeaderFromValue(cookie);
     await session.saveGuestSession(
       accessToken: accessToken,
       udid: udid,
-      zCookie: zCookie,
+      zCookie: cookieHeader,
     );
     // A clean anonymous account can answer /guest/self immediately while a
     // content edge still returns 40353 for a short propagation window. Only

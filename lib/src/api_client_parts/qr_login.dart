@@ -277,7 +277,9 @@ extension ZhihuApiClientQrLogin on ZhihuApiClient {
         refreshToken: poll.refreshToken,
         udid: session.udid,
         expiresIn: Duration(seconds: poll.expiresIn!),
-        zCookie: qrValue(poll.cookie, 'z_c0'),
+        // Token-bearing QR responses can refresh more than z_c0. Preserve the
+        // complete mobile cookie context just like the cookie-only branch.
+        zCookie: poll.cookie,
         uid: poll.userId,
       );
       return MobileSignInResult(

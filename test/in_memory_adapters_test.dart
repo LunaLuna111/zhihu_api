@@ -10,6 +10,17 @@ ApiResponse _response(Uri uri) => ApiResponse(
 );
 
 void main() {
+  test('normalizes mobile cookie maps without dropping named cookies', () {
+    expect(
+      ZhihuApiClient.cookieHeaderFromValue({
+        'z_c0': 'account-cookie',
+        'd_c0': 'device-cookie',
+        '_xsrf': 'csrf-token',
+      }),
+      'z_c0=account-cookie; d_c0=device-cookie; _xsrf=csrf-token',
+    );
+  });
+
   test('in-memory session stores and clears a guest context', () async {
     final session = InMemoryApiSession();
 
@@ -71,6 +82,27 @@ void main() {
       expect(session.authorization, 'Bearer access-token');
     },
   );
+
+  test('keeps and refreshes the complete mobile cookie context', () async {
+    final session = InMemoryApiSession();
+    await session.saveAccountSession(
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+      udid: 'device-id',
+      expiresIn: const Duration(hours: 1),
+      zCookie: 'z_c0=account-cookie; d_c0=device-cookie; _xsrf=csrf-token',
+    );
+
+    expect(
+      session.cookie,
+      'z_c0=account-cookie; d_c0=device-cookie; _xsrf=csrf-token',
+    );
+    await session.updateCookie('d_c0=rotated-cookie; Path=/; HttpOnly');
+    expect(
+      session.cookie,
+      'z_c0=account-cookie; d_c0=rotated-cookie; _xsrf=csrf-token',
+    );
+  });
 
   test(
     'in-memory response cache is bounded and refreshes insertion order',

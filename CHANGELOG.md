@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.9
+
+- Preserve the complete mobile cookie context returned by account, Guest, and
+  QR login flows.
+- Persist safe `Set-Cookie` updates from successful mobile API responses
+  through an optional session capability.
+
 ## 0.2.6
 
 - Added comment image upload alias and `comment_img` payload support.
