@@ -22,11 +22,17 @@ void main() {
     test('reads nested pin envelopes and JSON encoded content', () {
       final value = <String, dynamic>{
         'data': <String, dynamic>{
-          'pin': <String, dynamic>{'content': '{"text":"想法正文"}'},
+          'pin': <String, dynamic>{
+            'type': 'pin',
+            'id': '33',
+            'content': '{"text":"想法正文"}',
+          },
         },
       };
 
       expect(htmlContent(value), '想法正文');
+      expect(unwrapObject(value)['type'], 'pin');
+      expect(idOf(value), '33');
     });
 
     test('reads blocks-only pin content and its media', () {

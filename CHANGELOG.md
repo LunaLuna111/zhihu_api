@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.14
+
+- Unwrap `data.pin` and `result` envelopes without losing pin identity.
+
 ## 0.2.13
 
 - Preserve pin identity when the post body is an object-valued `content`.

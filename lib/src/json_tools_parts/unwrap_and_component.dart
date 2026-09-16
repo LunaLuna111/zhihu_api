@@ -46,7 +46,14 @@ Map<String, dynamic> _unwrapObjectUncached(Map<String, dynamic> source) {
           'business_id',
         ].any((key) => plainText(current[key]).isNotEmpty);
     Map<String, dynamic>? nested;
-    for (final key in const ['target', 'object', 'data', 'content']) {
+    for (final key in const [
+      'target',
+      'object',
+      'data',
+      'pin',
+      'result',
+      'content',
+    ]) {
       // A detail response can legitimately store the post body as a map
       // under `content` (for example a pin document tree). Once the outer
       // map already identifies itself as the answer/article/pin, descending
