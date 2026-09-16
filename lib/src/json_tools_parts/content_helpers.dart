@@ -247,6 +247,18 @@ String? _contentMarkup(Object? value, {int depth = 0}) {
     'body',
     'content',
     'value',
+    // Newer pin/detail responses use a document tree instead of the legacy
+    // PinContent list. Keep the traversal generic so the client does not
+    // need a second renderer just for these wire aliases.
+    'blocks',
+    'nodes',
+    'children',
+    'elements',
+    'paragraphs',
+    'items',
+    'rich_text',
+    'richText',
+    'data',
   ]) {
     final nested = _contentMarkup(map[key], depth: depth + 1);
     if (nested != null && nested.trim().isNotEmpty) return nested;
@@ -288,6 +300,14 @@ String? htmlContent(Object? value) {
       'plain_content',
       'body',
       'text',
+      'blocks',
+      'nodes',
+      'children',
+      'elements',
+      'paragraphs',
+      'items',
+      'rich_text',
+      'richText',
     ]) {
       final content = _contentMarkup(object[key]);
       if (content != null && content.trim().isNotEmpty) return content;

@@ -29,6 +29,35 @@ void main() {
       expect(htmlContent(value), '想法正文');
     });
 
+    test('reads blocks-only pin content and its media', () {
+      const value = <String, dynamic>{
+        'type': 'pin',
+        'content': {
+          'blocks': [
+            {
+              'type': 'paragraph',
+              'children': [
+                {'text': '第一段'},
+              ],
+            },
+            {
+              'type': 'image',
+              'image': {'url': 'https://example.com/pin-image.jpg'},
+            },
+            {
+              'type': 'paragraph',
+              'children': [
+                {'text': '第二段'},
+              ],
+            },
+          ],
+        },
+      };
+
+      expect(htmlContent(value), '第一段\n\n第二段');
+      expect(contentImageUrlsOf(value), ['https://example.com/pin-image.jpg']);
+    });
+
     test('keeps ordinary html unchanged', () {
       const value = <String, dynamic>{'content': '<p>正文</p><img src="x">'};
 

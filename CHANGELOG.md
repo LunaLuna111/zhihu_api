@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.12
+
+- Parse block-tree and rich-text aliases used by newer pin/detail responses.
+- Preserve image URLs nested inside pin content blocks.
+
 ## 0.2.11
 
 - Normalize nested and JSON-encoded pin body payloads for the shared content
