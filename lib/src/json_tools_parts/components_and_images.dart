@@ -272,6 +272,7 @@ List<String> contentImageUrlsOf(Map<String, dynamic> source, {int limit = 3}) {
       'artwork',
       'images',
       'image_list',
+      'content',
       'blocks',
       'nodes',
       'children',

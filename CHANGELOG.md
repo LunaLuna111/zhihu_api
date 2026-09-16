@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.13
+
+- Preserve pin identity when the post body is an object-valued `content`.
+- Traverse that body container when collecting nested image URLs.
+
 ## 0.2.12
 
 - Parse block-tree and rich-text aliases used by newer pin/detail responses.

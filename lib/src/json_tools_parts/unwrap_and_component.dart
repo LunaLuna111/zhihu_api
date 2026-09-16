@@ -30,8 +30,29 @@ Map<String, dynamic> _unwrapObjectUncached(Map<String, dynamic> source) {
   if (hotRank != null) return hotRank;
   var current = source;
   for (var i = 0; i < 4; i++) {
+    final marker = plainText(current['type']).toLowerCase();
+    final hasOwnContentIdentity =
+        (marker.contains('answer') ||
+            marker.contains('article') ||
+            marker.contains('pin') ||
+            marker == 'question' ||
+            marker == 'zvideo' ||
+            marker == 'video') &&
+        const [
+          'id',
+          'content_id',
+          'contentId',
+          'token',
+          'business_id',
+        ].any((key) => plainText(current[key]).isNotEmpty);
     Map<String, dynamic>? nested;
     for (final key in const ['target', 'object', 'data', 'content']) {
+      // A detail response can legitimately store the post body as a map
+      // under `content` (for example a pin document tree). Once the outer
+      // map already identifies itself as the answer/article/pin, descending
+      // into that body destroys the post identity and makes later metadata
+      // and cache checks reject an otherwise valid response.
+      if (key == 'content' && hasOwnContentIdentity) continue;
       final value = current[key];
       if (value is Map<String, dynamic>) {
         nested = value;

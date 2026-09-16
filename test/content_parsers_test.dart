@@ -32,6 +32,7 @@ void main() {
     test('reads blocks-only pin content and its media', () {
       const value = <String, dynamic>{
         'type': 'pin',
+        'id': '33',
         'content': {
           'blocks': [
             {
@@ -56,6 +57,8 @@ void main() {
 
       expect(htmlContent(value), '第一段\n\n第二段');
       expect(contentImageUrlsOf(value), ['https://example.com/pin-image.jpg']);
+      expect(unwrapObject(value)['type'], 'pin');
+      expect(idOf(value), '33');
     });
 
     test('keeps ordinary html unchanged', () {
