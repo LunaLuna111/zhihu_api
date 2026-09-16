@@ -210,6 +210,9 @@ List<String> contentImageUrlsOf(Map<String, dynamic> source, {int limit = 3}) {
       for (final key in const [
         'images',
         'image_list',
+        'content',
+        'content_data',
+        'body',
         'items',
         'urls',
         'variants',

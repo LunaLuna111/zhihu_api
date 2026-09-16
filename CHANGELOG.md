@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.11
+
+- Normalize nested and JSON-encoded pin body payloads for the shared content
+  parser.
+- Include nested content media when collecting body image URLs.
+
 ## 0.2.10
 
 - Normalize legacy nested mobile cookie values before they reach write

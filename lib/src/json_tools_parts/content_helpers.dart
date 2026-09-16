@@ -211,26 +211,99 @@ String? pagingNext(Object? value) {
   return next == null || next.isEmpty ? null : next;
 }
 
+String? _contentMarkup(Object? value, {int depth = 0}) {
+  if (depth > 6 || value == null) return null;
+  if (value is String) {
+    final text = value.trim();
+    if (text.isEmpty) return null;
+    // Some pin/detail variants serialize a rich-text object inside the
+    // `content` string. Decode only JSON-looking strings so ordinary HTML and
+    // user text are returned byte-for-byte.
+    final decoded = _decodedStructuredValue(text);
+    if (!identical(decoded, text)) {
+      final nested = _contentMarkup(decoded, depth: depth + 1);
+      if (nested != null && nested.isNotEmpty) return nested;
+    }
+    return value;
+  }
+  if (value is List) {
+    final parts = <String>[];
+    for (final item in value) {
+      final part = _contentMarkup(item, depth: depth + 1);
+      if (part != null && part.trim().isNotEmpty) parts.add(part.trim());
+    }
+    return parts.isEmpty ? null : parts.join('\n\n');
+  }
+  final map = stringMap(value);
+  if (map == null) return null;
+  for (final key in const [
+    'html',
+    'content_html',
+    'html_content',
+    'script',
+    'text',
+    'plain_text',
+    'plain_content',
+    'body',
+    'content',
+    'value',
+  ]) {
+    final nested = _contentMarkup(map[key], depth: depth + 1);
+    if (nested != null && nested.trim().isNotEmpty) return nested;
+  }
+  return null;
+}
+
+Iterable<Map<String, dynamic>> _contentCandidates(
+  Map<String, dynamic> root,
+) sync* {
+  var current = root;
+  final seen = <Map<String, dynamic>>{};
+  for (var depth = 0; depth < 5; depth++) {
+    if (!seen.add(current)) return;
+    yield current;
+    Map<String, dynamic>? next;
+    for (final key in const ['data', 'object', 'target', 'pin', 'result']) {
+      final candidate = stringMap(current[key]);
+      if (candidate != null) {
+        next = candidate;
+        break;
+      }
+    }
+    if (next == null) return;
+    current = next;
+  }
+}
+
 String? htmlContent(Object? value) {
-  if (value is! Map<String, dynamic>) return null;
-  Map<String, dynamic> object = value;
-  if (value['data'] is Map<String, dynamic>) {
-    object = value['data'] as Map<String, dynamic>;
+  final root = stringMap(value);
+  if (root == null) return null;
+  for (final object in _contentCandidates(root)) {
+    for (final key in const [
+      'content',
+      'content_html',
+      'html_content',
+      'script',
+      'html',
+      'plain_content',
+      'body',
+      'text',
+    ]) {
+      final content = _contentMarkup(object[key]);
+      if (content != null && content.trim().isNotEmpty) return content;
+    }
+    final manuscript = object['manuscript_content'];
+    final manuscriptMap = stringMap(manuscript);
+    final manuscriptData = stringMap(manuscriptMap?['data']);
+    if (manuscriptData != null) {
+      final script = manuscriptData['script'];
+      final scriptType = jsonInt(manuscriptData['script_type']);
+      final content = _contentMarkup(script);
+      if (content != null && scriptType != 1) return content;
+    }
+    final salt = SaltManuscriptEnvelope.fromJson(object);
+    if (salt.directHtml case final direct?) return direct;
   }
-  for (final key in const ['content', 'script', 'html']) {
-    final content = object[key];
-    if (content is String && content.trim().isNotEmpty) return content;
-  }
-  final manuscript = object['manuscript_content'];
-  if (manuscript is Map<String, dynamic> &&
-      manuscript['data'] is Map<String, dynamic>) {
-    final manuscriptData = manuscript['data'] as Map<String, dynamic>;
-    final script = manuscriptData['script'];
-    final scriptType = jsonInt(manuscriptData['script_type']);
-    if (script is String && script.isNotEmpty && scriptType != 1) return script;
-  }
-  final salt = SaltManuscriptEnvelope.fromJson(object);
-  if (salt.directHtml case final direct?) return direct;
   return null;
 }
 
