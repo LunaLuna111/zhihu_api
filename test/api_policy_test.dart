@@ -25,6 +25,20 @@ void main() {
       isFalse,
     );
     expect(
+      ZhihuApiTransportPolicy.isApprovedNativeHttpTarget(
+        Uri.parse('https://www.zhihu.com/signin'),
+      ),
+      isFalse,
+    );
+    expect(
+      ZhihuApiTransportPolicy.isApprovedNativeHttpRequest(
+        'GET',
+        Uri.parse('https://www.zhihu.com/signin'),
+        null,
+      ),
+      isTrue,
+    );
+    expect(
       ZhihuApiTransportPolicy.isApprovedLoginCaptureTarget(
         Uri.parse('https://api.zhihu.com/people/self#fragment'),
       ),

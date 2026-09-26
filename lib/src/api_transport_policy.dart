@@ -89,9 +89,6 @@ abstract final class ZhihuApiTransportPolicy {
       uri.fragment.isEmpty &&
       (uri.host != ZhihuApiClient.publicWebHost ||
           uri.path.startsWith('/api/v4/') ||
-          uri.path == '/signin' ||
-          uri.path == '/udid' ||
-          uri.path == '/api/v3/oauth/captcha/v2' ||
           uri.path == '/api/v3/account/api/login/qrcode' ||
           RegExp(
             r'^/api/v3/account/api/login/qrcode/[A-Za-z0-9._~-]{1,256}/scan_info$',
@@ -131,7 +128,9 @@ abstract final class ZhihuApiTransportPolicy {
         (uri.path == '/signin' && normalizedMethod == 'GET') ||
         (uri.path == '/udid' && normalizedMethod == 'POST') ||
         (uri.path == '/api/v3/oauth/captcha/v2' && normalizedMethod == 'GET');
-    return isApprovedNativeHttpTarget(uri) &&
+    final isApprovedTarget =
+        isApprovedNativeHttpTarget(uri) || loginPrefetchPath;
+    return isApprovedTarget &&
         const {
           'GET',
           'POST',

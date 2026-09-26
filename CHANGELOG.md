@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.17
+
+- Keep QR-login web prefetch requests narrowly allow-listed without treating
+  the interactive sign-in page as a general native API target.
+
 ## 0.2.16
 
 - Tighten approved transport targets by rejecting fragments and oversized
