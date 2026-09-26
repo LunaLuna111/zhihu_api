@@ -3,6 +3,8 @@ export 'src/api_client_parts/bootstrap_and_diagnostics.dart'
     show ZhihuApiClientBootstrapAndDiagnostics;
 export 'src/api_client_parts/content_writes.dart'
     show ZhihuApiClientContentWrites;
+export 'src/api_client_parts/content_routes.dart'
+    show ZhihuApiClientContentRoutes;
 export 'src/api_client_parts/guest_bootstrap.dart'
     show ZhihuApiClientGuestBootstrap;
 export 'src/api_client_parts/negative_feedback.dart'
@@ -22,6 +24,8 @@ export 'src/api_response.dart';
 export 'src/api_session.dart';
 export 'src/api_session_cleanup.dart';
 export 'src/api_transport.dart';
+export 'src/api_transport_policy.dart';
+export 'src/api_session_protocol.dart';
 export 'src/bangcle_laes_cipher.dart';
 export 'src/bangcle_laes_encrypt_tables.dart';
 export 'src/comment_emoticons.dart';

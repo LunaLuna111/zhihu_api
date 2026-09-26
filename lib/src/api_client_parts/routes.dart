@@ -56,6 +56,9 @@ extension ZhihuApiClientRoutes on ZhihuApiClient {
       // The current search protocol sends 3.0.91 for this route.
       return const {'x-api-version': '3.0.91'};
     }
+    if (path == '/search/customize') {
+      return const {'x-api-version': '3.0.91'};
+    }
     if (RegExp(r'^/(?:v4/)?questions/\d+/(?:feeds|answers)$').hasMatch(path)) {
       return const {'x-api-version': '3.0.89', 'x-ad-styles': ''};
     }

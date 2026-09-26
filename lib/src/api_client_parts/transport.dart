@@ -62,7 +62,21 @@ extension ZhihuApiClientTransport on ZhihuApiClient {
   Future<ApiResponse> publicWebGet(
     String path, {
     Map<String, Object?> query = const {},
-  }) => send('GET', publicWebUri(path, query: query), headers: const {});
+  }) => publicWebGetUri(publicWebUri(path, query: query));
+
+  Future<ApiResponse> publicWebGetUri(Uri uri) {
+    if (uri.scheme != 'https' ||
+        uri.host != ZhihuApiClient.publicWebHost ||
+        uri.hasPort && uri.port != 443 ||
+        uri.userInfo.isNotEmpty ||
+        uri.fragment.isNotEmpty ||
+        !uri.path.startsWith('/api/v4/')) {
+      throw const ApiTransportException(
+        '公开 Web 回退只允许 www.zhihu.com 的 /api/v4/ 读取路由',
+      );
+    }
+    return send('GET', uri, headers: const {});
+  }
 
   /// Fetches the same read-only video metadata used by the official player
   /// when an answer only contains a Lens ID or its embedded playlist expired.

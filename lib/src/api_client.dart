@@ -18,6 +18,7 @@ import 'x_zse_signer.dart';
 
 export 'api_client_parts/bootstrap_and_diagnostics.dart';
 export 'api_client_parts/content_writes.dart';
+export 'api_client_parts/content_routes.dart';
 export 'api_client_parts/guest_bootstrap.dart';
 export 'api_client_parts/mobile_login.dart';
 export 'api_client_parts/negative_feedback.dart';

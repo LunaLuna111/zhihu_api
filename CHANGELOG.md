@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.15
+
+- Centralize content/discovery routes, public Web fallbacks, transport safety
+  policy, and session signature helpers for client integrations.
+
 ## 0.2.14
 
 - Unwrap `data.pin` and `result` envelopes without losing pin identity.
