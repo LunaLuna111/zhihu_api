@@ -25,7 +25,7 @@ extension ZhihuApiClientContentRoutes on ZhihuApiClient {
       }
       return parsed;
     }
-    if (!text.startsWith('/')) return null;
+    if (!text.startsWith('/') || parsed.fragment.isNotEmpty) return null;
     return apiUri(text);
   }
 

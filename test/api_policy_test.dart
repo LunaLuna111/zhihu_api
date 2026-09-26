@@ -24,6 +24,20 @@ void main() {
       ),
       isFalse,
     );
+    expect(
+      ZhihuApiTransportPolicy.isApprovedLoginCaptureTarget(
+        Uri.parse('https://api.zhihu.com/people/self#fragment'),
+      ),
+      isFalse,
+    );
+    expect(
+      ZhihuApiTransportPolicy.isApprovedSaltRelayRequest(
+        'POST',
+        Uri.parse('https://api.zhihu.com/remix-pre-web/manuscript/1/2/content'),
+        List<int>.filled(4 * 1024 * 1024 + 1, 0),
+      ),
+      isFalse,
+    );
   });
 
   test('builds browser bridge targets without client-side host rules', () {
@@ -82,6 +96,7 @@ void main() {
       api.apiUriFromServerValue('https://example.com/people/alice/answers'),
       isNull,
     );
+    expect(api.apiUriFromServerValue('/people/alice/answers#fragment'), isNull);
   });
 }
 

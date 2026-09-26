@@ -30,7 +30,8 @@ abstract final class ZhihuApiTransportPolicy {
       uri.scheme == 'https' &&
       uri.host == ZhihuApiClient.apiHost &&
       (!uri.hasPort || uri.port == 443) &&
-      uri.userInfo.isEmpty;
+      uri.userInfo.isEmpty &&
+      uri.fragment.isEmpty;
 
   static bool isApprovedLoginCaptureRequest(
     String method,
@@ -48,6 +49,7 @@ abstract final class ZhihuApiTransportPolicy {
       uri.host == ZhihuApiClient.apiHost &&
       (!uri.hasPort || uri.port == 443) &&
       uri.userInfo.isEmpty &&
+      uri.fragment.isEmpty &&
       saltRelayPrefixes.any(uri.path.startsWith);
 
   static bool isApprovedSaltRelayRequest(
@@ -60,6 +62,7 @@ abstract final class ZhihuApiTransportPolicy {
     if (normalizedMethod == 'GET') return body == null;
     return normalizedMethod == 'POST' &&
         body != null &&
+        body.length <= maxRequestBytes(uri) &&
         RegExp(
           r'^/remix-pre-web/manuscript/\d+/\d+/content$',
         ).hasMatch(uri.path);
@@ -150,7 +153,9 @@ abstract final class ZhihuApiTransportPolicy {
             uri.host != ZhihuApiClient.publicWebHost) ||
         uri.hasPort && uri.port != 443 ||
         uri.userInfo.isNotEmpty ||
-        uri.fragment.isNotEmpty) {
+        uri.fragment.isNotEmpty ||
+        uri.host == ZhihuApiClient.publicWebHost &&
+            !uri.path.startsWith('/api/v4/')) {
       throw const ApiTransportException('浏览器预览只允许已审核的知乎 HTTPS API');
     }
     final bridgePrefix = uri.host == ZhihuApiClient.publicWebHost

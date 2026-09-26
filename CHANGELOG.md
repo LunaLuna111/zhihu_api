@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.16
+
+- Tighten approved transport targets by rejecting fragments and oversized
+  debug relay bodies before they reach a native bridge.
+
 ## 0.2.15
 
 - Centralize content/discovery routes, public Web fallbacks, transport safety
